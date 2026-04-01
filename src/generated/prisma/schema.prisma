@@ -1,0 +1,70 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+// ── Required tables ──────────────────
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  favorites   Favorite[]
+  viewHistory ViewHistory[]
+  generations Generation[]
+}
+
+// ── App-specific tables ──────────────────────────
+model Favorite {
+  id       String   @id @default(cuid())
+  userId   String
+  promptId String
+  addedAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, promptId])
+  @@index([userId])
+}
+
+model ViewHistory {
+  id       String   @id @default(cuid())
+  userId   String
+  promptId String
+  viewedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, promptId])
+  @@index([userId])
+}
+
+model Generation {
+  id        String   @id @default(cuid())
+  userId    String
+  taskId    String
+  prompt    String
+  imageUrl  String?
+  status    String   @default("PROCESSING")
+  progress  Int      @default(0)
+  width     Int
+  height    Int
+  quality   String   @default("sd")
+  error     String?
+  totalTime Float?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([taskId])
+}
