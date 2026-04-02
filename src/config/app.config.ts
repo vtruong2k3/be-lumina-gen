@@ -4,13 +4,13 @@ export const appConfig = () => {
   // Google callback URL is auto-built from PORT — no need to set GOOGLE_CALLBACK_URL in .env
   const googleCallbackUrl =
     process.env.GOOGLE_CALLBACK_URL ||
-    `http://localhost:${port}/api/auth/google/callback`;
+    `http://localhost:${port}/api/auth/callback/google`;
 
   return {
     port,
     nodeEnv: process.env.NODE_ENV || 'development',
     frontend: {
-      url: process.env.FRONTEND_URL || 'http://localhost:3000',
+      url: process.env.FRONTEND_URL!,
     },
     database: {
       url: process.env.DATABASE_URL!,

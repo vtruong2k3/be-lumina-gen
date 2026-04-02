@@ -83,7 +83,7 @@ export class AuthController {
     // Passport handles the redirect automatically — this method body is never reached.
   }
 
-  @Get('google/callback')
+  @Get('callback/google')
   @UseGuards(GoogleAuthGuard)
   @ApiExcludeEndpoint() // Hide from Swagger (browser redirect endpoint)
   async googleCallback(

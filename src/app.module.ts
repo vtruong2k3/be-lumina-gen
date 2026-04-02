@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { appConfig } from './config/app.config';
 import { PrismaModule } from './prisma/prisma.module';
 // Modules
@@ -17,6 +19,13 @@ import { TrendingModule } from './modules/trending/trending.module';
       isGlobal: true,
       load: [appConfig],
     }),
+    // Global Rate Limiting: 100 requests per 60 seconds per IP
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000, // 60 seconds (ms)
+        limit: 100,
+      },
+    ]),
     PrismaModule,
     AuthModule,
     UsersModule,
@@ -25,6 +34,13 @@ import { TrendingModule } from './modules/trending/trending.module';
     GenerationsModule,
     AiModule,
     TrendingModule,
+  ],
+  providers: [
+    // Apply ThrottlerGuard globally across all routes
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
   ],
 })
 export class AppModule {}

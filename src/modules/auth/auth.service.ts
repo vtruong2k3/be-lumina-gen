@@ -31,7 +31,7 @@ export class AuthService {
       password: hashedPassword,
     });
 
-    return this.generateTokens(user.id);
+    return this.generateTokens(user);
   }
 
   async login(dto: LoginDto) {
@@ -42,7 +42,7 @@ export class AuthService {
     const isValid = await bcrypt.compare(dto.password, user.password);
     if (!isValid) throw new UnauthorizedException('Invalid credentials');
 
-    return this.generateTokens(user.id);
+    return this.generateTokens(user);
   }
 
   async refresh(refreshToken: string) {
@@ -50,7 +50,10 @@ export class AuthService {
       const payload = this.jwtService.verify<{ sub: string }>(refreshToken, {
         secret: this.configService.get<string>('jwt.refreshSecret'),
       });
-      return this.generateTokens(payload.sub);
+      // Re-fetch user from DB to get fresh name/image for new token
+      const user = await this.usersService.findById(payload.sub);
+      if (!user) throw new UnauthorizedException('User not found');
+      return this.generateTokens(user);
     } catch {
       throw new UnauthorizedException('Invalid or expired refresh token');
     }
@@ -69,16 +72,25 @@ export class AuthService {
       picture: googleProfile.picture,
     });
 
-    return this.generateTokens(user.id);
+    return this.generateTokens(user);
   }
 
   // ── Token Generation ─────────────────────────────────────────────
 
-  generateTokens(userId: string) {
-    const payload = { sub: userId };
+  generateTokens(user: { id: string; email: string; name?: string | null; image?: string | null }) {
+    // Access token: embed profile so FE can decode without extra API call
+    const accessPayload = {
+      sub: user.id,
+      email: user.email,
+      name: user.name ?? null,
+      image: user.image ?? null,
+    };
 
-    const access_token = this.jwtService.sign(payload);
-    const refresh_token = this.jwtService.sign(payload, {
+    // Refresh token: minimal payload (only sub needed for rotation)
+    const refreshPayload = { sub: user.id };
+
+    const access_token = this.jwtService.sign(accessPayload);
+    const refresh_token = this.jwtService.sign(refreshPayload, {
       secret: this.configService.get<string>('jwt.refreshSecret') as string,
       expiresIn: '7d' as const,
     });

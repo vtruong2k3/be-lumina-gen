@@ -96,4 +96,5 @@ model Generation {
 
   @@index([userId])
   @@index([taskId])
+  @@index([userId, createdAt(sort: Desc)])
 }

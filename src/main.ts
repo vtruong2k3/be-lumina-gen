@@ -5,6 +5,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -14,12 +15,15 @@ async function bootstrap() {
 
   // CORS — allow frontend with cookies
   app.enableCors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: process.env.FRONTEND_URL!,
     credentials: true,
   });
 
   // Cookie parser middleware (required for HttpOnly refresh_token)
   app.use(cookieParser());
+
+  // Security headers — protect against XSS, Clickjacking, etc.
+  app.use(helmet());
 
   // Global Validation Pipe
   app.useGlobalPipes(
