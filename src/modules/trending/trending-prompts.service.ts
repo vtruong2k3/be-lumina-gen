@@ -131,6 +131,11 @@ export class TrendingPromptsService {
     return item;
   }
 
+  findByIds(ids: string[]): TrendingPrompt[] {
+    if (!ids || ids.length === 0) return [];
+    return this.prompts.filter((p) => ids.includes(p.id));
+  }
+
   findByAuthor(author: string, limit = 10): TrendingPrompt[] {
     return this.prompts
       .filter((p) => p.author.toLowerCase() === author.toLowerCase())

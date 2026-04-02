@@ -1,13 +1,16 @@
 import {
   Controller,
   Get,
+  Post,
+  Body,
   Param,
   Query,
   ParseIntPipe,
   DefaultValuePipe,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiQuery, ApiBody } from '@nestjs/swagger';
 import { TrendingPromptsService } from './trending-prompts.service';
+import { BulkTrendingDto } from './dto/bulk-trending.dto';
 
 @ApiTags('trending')
 @Controller('trending')
@@ -68,6 +71,19 @@ export class TrendingPromptsController {
     return {
       categories: this.trendingService.getCategories(),
       models: this.trendingService.getModels(),
+    };
+  }
+
+  /**
+   * POST /api/trending/bulk
+   * Get multiple trending prompts by their IDs
+   */
+  @Post('bulk')
+  @ApiOperation({ summary: 'Get multiple trending prompts by their IDs' })
+  @ApiBody({ type: BulkTrendingDto })
+  findByIds(@Body() payload: BulkTrendingDto) {
+    return {
+      data: this.trendingService.findByIds(payload.ids || []),
     };
   }
 
